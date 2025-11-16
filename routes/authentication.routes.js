@@ -1,44 +1,15 @@
 const express = require("express");
-const { createClient, checkUserCredentials, getClientsByReferCode, createAuthority, getAllClients, getAllAuthorities, updateClient, deleteClient, getClientById, getEmployeeById, updateEmployee, deleteEmployee } = require("../controller/auth/signup");
-const { addRolePermissions, getPermissionsForRole, getPermissions, updatePermission, roleAccordingToId } = require("../controller/user/role-permission");
 const router = express.Router();
+const verifyJWT = require("../middleware/verifyJWT");
+const { createSuperAdmin, loginSuperAdmin, changePassword, updateProfile, deleteSuperAdmin } = require("../controller/auth/superadmin");
 
+// Public
+router.post("/create-superadmin", createSuperAdmin);
+router.post("/login-superadmin", loginSuperAdmin);
 
+// Protected (requires JWT)
+router.put("/change-password", verifyJWT, changePassword);
+router.put("/update-profile", verifyJWT, updateProfile);
+router.delete("/delete-superadmin/:id", verifyJWT, deleteSuperAdmin);
 
-// Client routes
-router.post("/register-new-client", createClient);
-router.put("/update-client/:id", updateClient);
-router.delete("/delete-client/:id", deleteClient);
-router.get("/get-refered-users-according-to-userId/:userId", getClientsByReferCode);
-router.get("/get-clients", getAllClients);
-router.get("/get-client-according-to-id/:id", getClientById);
-
-
-
-
-router.post("/login", checkUserCredentials);
-
-
-
-
-// Employee routes
-router.post("/register-new-authority-user",createAuthority);
-router.get("/get-authority", getAllAuthorities);
-router.get("/get-employee-according-to-id/:id", getEmployeeById);
-router.put("/update-employee/:id", updateEmployee);
-router.delete("/delete-employee/:id", deleteEmployee);
-
-
-
-
-
-// Permissions
-router.post("/add-role-permission", addRolePermissions);
-router.get("/get-role-permission/:roleName", getPermissionsForRole);
-router.get("/get-role-permissions", getPermissions);
-router.put("/update-role-permission/:id", updatePermission);
-router.get("/role-according-to-id/:id", roleAccordingToId);
-
-
-
-module.exports = authenticationRoutes = router;
+module.exports = router;

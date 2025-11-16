@@ -1,35 +1,44 @@
 const { DataTypes: dt } = require("sequelize");
 const sequelize = require("../../database/connection");
 
-const Package = sequelize.define("Package", {
+const SuperAdmin = sequelize.define("superadmins", {
   id: {
     type: dt.INTEGER,
     autoIncrement: true,
     unique: true,
     primaryKey: true,
   },
-  packageName: {
+  name: {
+    type: dt.STRING,
+    allowNull: false,
+  },
+  email: {
     type: dt.STRING,
     allowNull: false,
     unique: true,
   },
-  packageBandwidth: {
+  phoneNumber: {
     type: dt.STRING,
     allowNull: false,
   },
-  packagePrice: {
+  photo: {
+    type: dt.STRING,
+    allowNull: true,
+  },
+  password: {
     type: dt.STRING,
     allowNull: false,
   },
-  packageDetails: {
-    type: dt.TEXT,
-    allowNull: true, // Optional field
+  role: {
+    type: dt.STRING,
+    allowNull: false,
+    defaultValue: "super-admin",
   },
   status: {
     type: dt.STRING,
     allowNull: false,
-    defaultValue: "Active", // Default value
+    defaultValue: "pending",
   },
 });
 
-module.exports = Package;
+module.exports = SuperAdmin;
