@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const SuperAdmin = require("../../models/Authentication/superadmin-model");
 
-const verifyJWT = (req, res, next) => {
+//! The Super Admin JWT Verification Middleware
+const verifySuperAdminJwt = (req, res, next) => {
   const authHeader = req.headers?.authorization || req.headers?.Authorization;
 
   if (!authHeader?.startsWith("Bearer ")) return res.sendStatus(401);
@@ -13,7 +14,7 @@ const verifyJWT = (req, res, next) => {
     async (error, decoded) => {
       if (error) return next("Session Expired!");
       if (!decoded?.id) return next("invalid id");
-      const user = await User.findOne({ where: { id: decoded?.id } });
+      const user = await SuperAdmin.findOne({ where: { id: decoded?.id } });
       if (!user) return next("Invalid token!");
 
       req.id = decoded?.id;
@@ -24,4 +25,6 @@ const verifyJWT = (req, res, next) => {
   );
 };
 
-module.exports = verifyJWT;
+
+
+module.exports = verifySuperAdminJwt;

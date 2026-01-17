@@ -93,19 +93,29 @@ const changePassword = async (req, res, next) => {
 // ===================== UPDATE PROFILE =====================
 const updateProfile = async (req, res) => {
   try {
-    const adminId = req.id;
+    const adminId = req.params.id;
 
     await SuperAdmin.update(req.body, { where: { id: adminId } });
 
+    // * Fetch the updated admin data
+    const updatedAdmin = await SuperAdmin.findByPk(adminId, {
+      attributes: { exclude: ['password'] }
+    });
+
+    // Check if admin exists
+    if (!updatedAdmin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
     res.status(200).json({
       message: "Profile updated successfully!",
+      data: updatedAdmin,
     });
 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 
 // ===================== DELETE SUPER ADMIN =====================
