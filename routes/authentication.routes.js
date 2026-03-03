@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { createSuperAdmin, loginSuperAdmin, changePassword, updateProfile, deleteSuperAdmin } = require("../controller/auth/superadmin");
+const { createSuperAdmin, loginSuperAdmin, changePassword, updateProfile, deleteSuperAdmin, getSuperAdminById } = require("../controller/auth/superadmin");
 // const { createSuperAdmin, loginSuperAdmin, changePassword, updateProfile, deleteSuperAdmin } = require("../controller/auth/superAdmin");
-const { createSchoolAdmin, loginSchoolAdmin, updateSchoolAdmin, deleteSchoolAdmin, getSchoolAdminById } = require("../controller/auth/schoolAdmin");
+const { createSchoolAdmin, loginSchoolAdmin, updateSchoolAdmin, deleteSchoolAdmin, getSchoolAdminById, getAllSchool } = require("../controller/auth/schoolAdmin");
 const { createBranch, getAllBranches, getBranchById, updateBranch, deleteBranch } = require("../controller/auth/branchAdmin");
 const { createBranchUser, loginBranchUser, getBranchUserById, updateBranchUser, deleteBranchUser } = require("../controller/auth/branchAdminUser");
 const { createTeacher, loginTeacher, getTeacherById, updateTeacher, deleteTeacher } = require("../controller/auth/teacherUser");
@@ -20,12 +20,12 @@ const verifySchoolJWT = require("../middleware/jwtVerification/schoolAdmin");
 //! Routes for Super Admin.
 // Public
 router.post("/create-superadmin", createSuperAdmin);
-router.post("/login-superadmin", loginSuperAdmin);
-
+router.post("/login-super-admin", loginSuperAdmin)
 // Protected (requires JWT)
 router.put("/change-password", verifySuperAdminJwt, changePassword);
-router.put("/super-admin/update-super-admin/:id", verifySuperAdminJwt, updateProfile);
+router.put("/update-super-admin/:id", verifySuperAdminJwt, updateProfile);
 router.delete("/delete-superadmin/:id", verifySuperAdminJwt, deleteSuperAdmin);
+router.get("/get-super-admin-by-id/:id", verifySuperAdminJwt, getSuperAdminById)
 
 
 
@@ -34,12 +34,13 @@ router.delete("/delete-superadmin/:id", verifySuperAdminJwt, deleteSuperAdmin);
 
 
 //! Routes for school admin. 
-router.post("/create-school", createSchoolAdmin); // public
+router.post("/create-school", verifySuperAdminJwt, createSchoolAdmin); // public
 router.post("/login-school", loginSchoolAdmin);   // public
 
-router.put("/school/update-school/:id", verifySchoolJWT, updateSchoolAdmin);     // protected
-router.delete("/delete-school/:id", verifySchoolJWT, deleteSchoolAdmin); // protected
-router.get("/get-school/:id", verifySchoolJWT, getSchoolAdminById);   // protected
+router.put("/school/update-school/:id", verifySuperAdminJwt, updateSchoolAdmin);     // protected
+router.delete("/delete-school/:id", verifySuperAdminJwt, deleteSchoolAdmin); // protected
+router.get("/get-school/:id", verifySuperAdminJwt, getSchoolAdminById);   // protected
+router.get("/get-school-all", verifySuperAdminJwt, getAllSchool)
 
 
 

@@ -14,6 +14,7 @@ const verifySchoolJWT = (req, res, next) => {
     async (error, decoded) => {
       if (error) return next("Session Expired!");
       if (!decoded?.id) return next("invalid id");
+      console.log(decoded?.id)
       const user = await SchoolAdmin.findOne({ where: { id: decoded?.id } });
       if (!user) return next("Invalid token!");
 

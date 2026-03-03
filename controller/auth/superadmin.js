@@ -55,7 +55,7 @@ const loginSuperAdmin = async (req, res, next) => {
 
     return res.status(200).json({
       message: "Login successful!",
-      token: accessToken,
+      accessToken: accessToken,
       data: admin,
     });
 
@@ -82,7 +82,7 @@ const changePassword = async (req, res, next) => {
     admin.password = await bcrypt.hash(newPassword, 10);
     await admin.save();
 
-    res.status(200).json({ message: "Password updated successfully!" });
+    res.status(200).json({ message: "Password updated successfully!", success: true });
 
   } catch (error) {
     next(error);
@@ -136,10 +136,41 @@ const deleteSuperAdmin = async (req, res) => {
 };
 
 
+// ===================== GET SUPER ADMIN BY ID =====================
+const getSuperAdminById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const admin = await SuperAdmin.findByPk(id, {
+      attributes: { exclude: ["password"] }
+    });
+
+    if (!admin) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Super admin not found!" 
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Super admin retrieved successfully!",
+      data: admin
+    });
+
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+};
+
 module.exports = {
   createSuperAdmin,
   loginSuperAdmin,
   changePassword,
   updateProfile,
   deleteSuperAdmin,
+  getSuperAdminById
 };

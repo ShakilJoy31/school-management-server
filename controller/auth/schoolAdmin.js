@@ -24,6 +24,7 @@ const createSchoolAdmin = async (req, res, next) => {
 
     return res.status(201).json({
       message: "School admin created successfully!",
+      success: true,
       data: newAdmin,
     });
   } catch (error) {
@@ -119,10 +120,49 @@ const getSchoolAdminById = async (req, res) => {
   }
 };
 
+// ===================== GET ALL SCHOOL ADMINS WITH PAGINATION =====================
+const getAllSchool = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.size) || 10;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await SchoolAdmin.findAndCountAll({
+      attributes: { exclude: ["password"] },
+      limit: limit,
+      offset: offset,
+      order: [['createdAt', 'DESC']] // Optional: order by most recent first
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    return res.status(200).json({
+      success: true,
+      message: "School admins retrieved successfully!",
+      data: rows,
+      pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: count,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1
+        }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+};
+
+
 module.exports = {
   createSchoolAdmin,
   loginSchoolAdmin,
   updateSchoolAdmin,
   deleteSchoolAdmin,
   getSchoolAdminById,
+  getAllSchool
 };

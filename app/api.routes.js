@@ -3,8 +3,8 @@ const authenticationRoutes = require("../routes/authentication.routes");
 
 const router = require("express").Router();
 
-router.use("/user-creation", authenticationRoutes);
-
+router.use("/super-admin", authenticationRoutes);
+router.use("/school", authenticationRoutes);
 
 
 
