@@ -3,10 +3,9 @@ const router = express.Router();
 const { createSuperAdmin, loginSuperAdmin, changePassword, updateProfile, deleteSuperAdmin, getSuperAdminById } = require("../controller/auth/superadmin");
 // const { createSuperAdmin, loginSuperAdmin, changePassword, updateProfile, deleteSuperAdmin } = require("../controller/auth/superAdmin");
 const { createSchoolAdmin, loginSchoolAdmin, updateSchoolAdmin, deleteSchoolAdmin, getSchoolAdminById, getAllSchool } = require("../controller/auth/schoolAdmin");
-const { createBranch, getAllBranches, getBranchById, updateBranch, deleteBranch } = require("../controller/auth/branchAdmin");
-const { createBranchUser, loginBranchUser, getBranchUserById, updateBranchUser, deleteBranchUser } = require("../controller/auth/branchAdminUser");
+const { createBranch, getAllBranches, getBranchById, updateBranch, deleteBranch, loginBranchAdmin } = require("../controller/auth/branchAdmin");
+const { createBranchUser, loginBranchUser, getBranchUserById, updateBranchUser, deleteBranchUser, getAllBranchUsers, toggleUserStatus } = require("../controller/auth/branchAdminUser");
 const { createTeacher, loginTeacher, getTeacherById, updateTeacher, deleteTeacher } = require("../controller/auth/teacherUser");
-const { createStudent, loginStudent, getStudentById, updateStudent, deleteStudent } = require("../controller/auth/studentUser");
 const verifySuperAdminJwt = require("../middleware/jwtVerification/superAdmin");
 const verifySchoolJWT = require("../middleware/jwtVerification/schoolAdmin");
 // const verifyBranchAdminJWT = require("../middleware/verifySuperAdminJwt");
@@ -20,7 +19,7 @@ const verifySchoolJWT = require("../middleware/jwtVerification/schoolAdmin");
 //! Routes for Super Admin.
 // Public
 router.post("/create-superadmin", createSuperAdmin);
-router.post("/login-super-admin", loginSuperAdmin)
+router.post("/login-super-admin", loginSuperAdmin);
 // Protected (requires JWT)
 router.put("/change-password", verifySuperAdminJwt, changePassword);
 router.put("/update-super-admin/:id", verifySuperAdminJwt, updateProfile);
@@ -37,38 +36,45 @@ router.get("/get-super-admin-by-id/:id", verifySuperAdminJwt, getSuperAdminById)
 router.post("/create-school", verifySuperAdminJwt, createSchoolAdmin); // public
 router.post("/login-school", loginSchoolAdmin);   // public
 
-router.put("/school/update-school/:id", verifySuperAdminJwt, updateSchoolAdmin);     // protected
-router.delete("/delete-school/:id", verifySuperAdminJwt, deleteSchoolAdmin); // protected
-router.get("/get-school/:id", verifySuperAdminJwt, getSchoolAdminById);   // protected
+router.put("/update-school/:id", verifySchoolJWT, updateSchoolAdmin);     // protected
+router.delete("/delete-school/:id", verifySchoolJWT, deleteSchoolAdmin); // protected
+router.get("/get-school-by-id/:id", verifySchoolJWT, getSchoolAdminById);   // protected
 router.get("/get-school-all", verifySuperAdminJwt, getAllSchool)
 
 
 
 
-//! Routes for branch admin. 
 
-router.post("/create-branch", createBranch);
+
+
+
+//! Routes for branch admin. 
+router.post("/create-branch", verifySchoolJWT, createBranch);
 // router.post("/login-branch", loginBranchAdmin);
 
-router.get("/branches", getAllBranches);
-router.get("/branch/:id", getBranchById);
-
-// Protected
-router.put("/branch/update-branch/:id", verifySchoolJWT, updateBranch);
+// Protected routes - require JWT verification
+router.get("/get-branch-all", verifySchoolJWT, getAllBranches);
+router.get("/get-branch/:id", verifySchoolJWT, getBranchById);
+router.put("/update-branch/:id", verifySchoolJWT, updateBranch);
 router.delete("/delete-branch/:id", verifySchoolJWT, deleteBranch);
 
 
 
 
 
-//! Routes for branch admin users.
-router.post("/user/create-user", createBranchUser);
-router.post("/user/login-user", loginBranchUser);
 
-// Protected
-router.get("/branch-user/:id", verifySchoolJWT, getBranchUserById);
-router.put("/user/update-user/:id", verifySchoolJWT, updateBranchUser);
-router.delete("/branch-user/:id", verifySchoolJWT, deleteBranchUser);
+
+
+
+//! Routes for branch admin user. 
+router.post("/create-user", createBranchUser);
+router.post("/login-user", loginBranchUser);
+// Protected routes - with pagination and search
+router.get("/get-user-all", getAllBranchUsers);
+router.get("/get-user/:id", getBranchUserById);
+router.put("/update-user/:id", updateBranchUser);
+router.delete("/delete-user/:id", deleteBranchUser);
+router.patch("/toggle-user-status/:id", toggleUserStatus);
 
 
 
@@ -85,32 +91,6 @@ router.post("/teacher/login-teacher", loginTeacher);
 router.get("/teacher/:id", verifySuperAdminJwt, getTeacherById);
 router.put("/teacher/:id", verifySuperAdminJwt, updateTeacher);
 router.delete("/teacher/:id", verifySuperAdminJwt, deleteTeacher);
-
-
-
-
-
-
-
-
-
-//! Routes for students.
-// Public
-router.post("/student/create-student", createStudent);
-router.post("/student/login-student", loginStudent);
-
-// Protected
-router.get("/student/:id", verifySuperAdminJwt, getStudentById);
-router.put("/student/:id", verifySuperAdminJwt, updateStudent);
-router.delete("/student/:id", verifySuperAdminJwt, deleteStudent);
-
-
-
-
-
-
-
-
 
 
 
