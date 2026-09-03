@@ -7,6 +7,7 @@ const streamRoutes = require("../routes/academic/stream.routes");
 const subjectRoutes = require("../routes/academic/subject.routes");
 const subjectGroup = require("../routes/academic/groupSubject.routes");
 const student = require("../routes/students/student.routes");
+const designation = require("../routes/teacher/designation.routes");
 const router = require("express").Router();
 
 router.use("/super-admin", authenticationRoutes);
@@ -24,5 +25,6 @@ router.use("/stream", streamRoutes);
 router.use("/subject", subjectRoutes);
 router.use("/group-subject", subjectGroup);
 router.use("/student", student);
+router.use("/designation", designation);
 
 module.exports = router;

@@ -6,8 +6,9 @@ const Session = require("../../models/academic/session.model");
 const Section = require("../../models/academic/section.model");
 const Stream = require("../../models/academic/stream.model");
 const Subject = require("../../models/academic/subject.model");
+const { create_access_token } = require("../../config/jwt");
 
-// =================== CREATE STUDENT ===================
+//! =================== CREATE STUDENT ===================
 const createStudent = async (req, res, next) => {
   try {
     const {
@@ -29,47 +30,61 @@ const createStudent = async (req, res, next) => {
       fatherName,
       motherName,
       parentPhone,
-      subjects
+      subjects,
     } = req.body;
 
     // Validate required fields
     const requiredFields = {
-      sessionYearId, name, phone, password, classNameId, classRoll,
-      sectionNameId, streamNameId, gender, religion, dob, bloodGroup,
-      address, fatherName, motherName, parentPhone, subjects
+      sessionYearId,
+      name,
+      phone,
+      password,
+      classNameId,
+      classRoll,
+      sectionNameId,
+      streamNameId,
+      gender,
+      religion,
+      dob,
+      bloodGroup,
+      address,
+      fatherName,
+      motherName,
+      parentPhone,
+      subjects,
     };
 
     for (const [field, value] of Object.entries(requiredFields)) {
       if (!value || (Array.isArray(value) && value.length === 0)) {
         return res.status(400).json({
           success: false,
-          message: `${field} is required`
+          message: `${field} is required`,
         });
       }
     }
 
     // Check if student with this phone already exists
     const existingStudentByPhone = await Student.findOne({
-      where: { phone }
+      where: { phone },
     });
 
     if (existingStudentByPhone) {
       return res.status(409).json({
         success: false,
-        message: "Student with this phone number already exists"
+        message: "Student with this phone number already exists",
       });
     }
 
     // Check if student with this email already exists (if email provided)
     if (email) {
       const existingStudentByEmail = await Student.findOne({
-        where: { email }
+        where: { email },
       });
 
       if (existingStudentByEmail) {
         return res.status(409).json({
           success: false,
-          message: "Student with this email already exists"
+          message: "Student with this email already exists",
         });
       }
     }
@@ -79,7 +94,7 @@ const createStudent = async (req, res, next) => {
     if (!classExists) {
       return res.status(404).json({
         success: false,
-        message: "Class not found"
+        message: "Class not found",
       });
     }
 
@@ -88,7 +103,7 @@ const createStudent = async (req, res, next) => {
     if (!sessionExists) {
       return res.status(404).json({
         success: false,
-        message: "Session not found"
+        message: "Session not found",
       });
     }
 
@@ -97,7 +112,7 @@ const createStudent = async (req, res, next) => {
     if (!sectionExists) {
       return res.status(404).json({
         success: false,
-        message: "Section not found"
+        message: "Section not found",
       });
     }
 
@@ -106,7 +121,7 @@ const createStudent = async (req, res, next) => {
     if (!streamExists) {
       return res.status(404).json({
         success: false,
-        message: "Stream not found"
+        message: "Stream not found",
       });
     }
 
@@ -116,7 +131,7 @@ const createStudent = async (req, res, next) => {
       if (!subjectExists) {
         return res.status(404).json({
           success: false,
-          message: `Subject with ID ${subjectId} not found`
+          message: `Subject with ID ${subjectId} not found`,
         });
       }
     }
@@ -126,14 +141,14 @@ const createStudent = async (req, res, next) => {
       where: {
         classNameId,
         sessionYearId,
-        classRoll
-      }
+        classRoll,
+      },
     });
 
     if (existingRoll) {
       return res.status(409).json({
         success: false,
-        message: `Roll number ${classRoll} already exists in this class for the selected session`
+        message: `Roll number ${classRoll} already exists in this class for the selected session`,
       });
     }
 
@@ -160,7 +175,7 @@ const createStudent = async (req, res, next) => {
       fatherName: fatherName.trim(),
       motherName: motherName.trim(),
       parentPhone,
-      subjects: JSON.stringify(subjects) // Store as JSON string
+      subjects: subjects,
     });
 
     // Remove password from response
@@ -185,42 +200,49 @@ const createStudent = async (req, res, next) => {
             name: subject.name,
             code: subject.code,
             marks: subject.marks,
-            passMarks: subject.passMarks
-          }
+            passMarks: subject.passMarks,
+          },
         });
       }
     }
 
     const enhancedResponse = {
       ...studentResponse,
-      subjects: JSON.stringify(subjects), // Keep as string for consistency
-      class: classData ? {
-        id: classData.id,
-        name: classData.name
-      } : null,
-      session: sessionData ? {
-        id: sessionData.id,
-        name: sessionData.name
-      } : null,
-      section: sectionData ? {
-        id: sectionData.id,
-        name: sectionData.name
-      } : null,
-      stream: streamData ? {
-        id: streamData.id,
-        name: streamData.name
-      } : null,
+      subjects: subjects,
+      class: classData
+        ? {
+            id: classData.id,
+            name: classData.name,
+          }
+        : null,
+      session: sessionData
+        ? {
+            id: sessionData.id,
+            name: sessionData.name,
+          }
+        : null,
+      section: sectionData
+        ? {
+            id: sectionData.id,
+            name: sectionData.name,
+          }
+        : null,
+      stream: streamData
+        ? {
+            id: streamData.id,
+            name: streamData.name,
+          }
+        : null,
       StudentSubject, // This matches what frontend expects
-      subjectDetails: StudentSubject.map(item => item.subject) // Keep for backward compatibility
+      subjectDetails: StudentSubject.map((item) => item.subject), // Keep for backward compatibility
     };
 
     res.status(201).json({
       success: true,
       statusCode: 201,
       message: "Student created successfully",
-      data: enhancedResponse
+      data: enhancedResponse,
     });
-
   } catch (error) {
     console.error("Create student error:", error);
     next(error);
@@ -230,7 +252,7 @@ const createStudent = async (req, res, next) => {
 // =================== GET ALL STUDENTS (Paginated with Search) ===================
 const getAllStudents = async (req, res, next) => {
   try {
-    const { page = 1, size = 10, search = '', classId, sessionId } = req.query;
+    const { page = 1, size = 10, search = "", classId, sessionId } = req.query;
 
     const limit = parseInt(size);
     const offset = (parseInt(page) - 1) * limit;
@@ -239,12 +261,12 @@ const getAllStudents = async (req, res, next) => {
     const whereCondition = {};
 
     // Add class filter if provided
-    if (classId && classId !== '0' && classId !== 0) {
+    if (classId && classId !== "0" && classId !== 0) {
       whereCondition.classNameId = classId;
     }
 
     // Add session filter if provided
-    if (sessionId && sessionId !== '0' && sessionId !== 0) {
+    if (sessionId && sessionId !== "0" && sessionId !== 0) {
       whereCondition.sessionYearId = sessionId;
     }
 
@@ -256,7 +278,7 @@ const getAllStudents = async (req, res, next) => {
         { email: { [Op.like]: `%${search}%` } },
         { fatherName: { [Op.like]: `%${search}%` } },
         { motherName: { [Op.like]: `%${search}%` } },
-        { parentPhone: { [Op.like]: `%${search}%` } }
+        { parentPhone: { [Op.like]: `%${search}%` } },
       ];
     }
 
@@ -265,8 +287,8 @@ const getAllStudents = async (req, res, next) => {
       where: whereCondition,
       limit,
       offset,
-      order: [['createdAt', 'DESC']],
-      attributes: { exclude: ['password'] } // Exclude password from results
+      order: [["createdAt", "DESC"]],
+      attributes: { exclude: ["password"] }, // Exclude password from results
     });
 
     // Enhance rows with related data
@@ -280,7 +302,7 @@ const getAllStudents = async (req, res, next) => {
       // Parse subjects from JSON string
       let subjectIds = [];
       try {
-        subjectIds = JSON.parse(row.subjects || '[]');
+        subjectIds = JSON.parse(row.subjects || "[]");
       } catch (e) {
         subjectIds = [];
       }
@@ -297,8 +319,8 @@ const getAllStudents = async (req, res, next) => {
               name: subject.name,
               code: subject.code,
               marks: subject.marks,
-              passMarks: subject.passMarks
-            }
+              passMarks: subject.passMarks,
+            },
           });
         }
       }
@@ -306,24 +328,32 @@ const getAllStudents = async (req, res, next) => {
       const rowData = row.toJSON();
       enhancedRows.push({
         ...rowData,
-        class: classData ? {
-          id: classData.id,
-          name: classData.name
-        } : null,
-        session: sessionData ? {
-          id: sessionData.id,
-          name: sessionData.name
-        } : null,
-        section: sectionData ? {
-          id: sectionData.id,
-          name: sectionData.name
-        } : null,
-        stream: streamData ? {
-          id: streamData.id,
-          name: streamData.name
-        } : null,
+        class: classData
+          ? {
+              id: classData.id,
+              name: classData.name,
+            }
+          : null,
+        session: sessionData
+          ? {
+              id: sessionData.id,
+              name: sessionData.name,
+            }
+          : null,
+        section: sectionData
+          ? {
+              id: sectionData.id,
+              name: sectionData.name,
+            }
+          : null,
+        stream: streamData
+          ? {
+              id: streamData.id,
+              name: streamData.name,
+            }
+          : null,
         StudentSubject, // This matches what frontend expects
-        subjectDetails: StudentSubject.map(item => item.subject) // Keep for backward compatibility
+        subjectDetails: StudentSubject.map((item) => item.subject), // Keep for backward compatibility
       });
     }
 
@@ -336,10 +366,9 @@ const getAllStudents = async (req, res, next) => {
         total: count,
         page: parseInt(page),
         size: limit,
-        totalPage: Math.ceil(count / limit)
-      }
+        totalPage: Math.ceil(count / limit),
+      },
     });
-
   } catch (error) {
     console.error("Get all students error:", error);
     next(error);
@@ -352,13 +381,13 @@ const getStudentById = async (req, res, next) => {
     const { id } = req.params;
 
     const studentData = await Student.findByPk(id, {
-      attributes: { exclude: ['password'] }
+      attributes: { exclude: ["password"] },
     });
 
     if (!studentData) {
       return res.status(404).json({
         success: false,
-        message: "Student not found"
+        message: "Student not found",
       });
     }
 
@@ -371,7 +400,7 @@ const getStudentById = async (req, res, next) => {
     // Parse subjects from JSON string
     let subjectIds = [];
     try {
-      subjectIds = JSON.parse(studentData.subjects || '[]');
+      subjectIds = JSON.parse(studentData.subjects || "[]");
     } catch (e) {
       subjectIds = [];
     }
@@ -388,49 +417,53 @@ const getStudentById = async (req, res, next) => {
             name: subject.name,
             code: subject.code,
             marks: subject.marks,
-            passMarks: subject.passMarks
-          }
+            passMarks: subject.passMarks,
+          },
         });
       }
     }
 
     const enhancedData = {
       ...studentData.toJSON(),
-      class: classData ? {
-        id: classData.id,
-        name: classData.name
-      } : null,
-      session: sessionData ? {
-        id: sessionData.id,
-        name: sessionData.name
-      } : null,
-      section: sectionData ? {
-        id: sectionData.id,
-        name: sectionData.name
-      } : null,
-      stream: streamData ? {
-        id: streamData.id,
-        name: streamData.name
-      } : null,
+      class: classData
+        ? {
+            id: classData.id,
+            name: classData.name,
+          }
+        : null,
+      session: sessionData
+        ? {
+            id: sessionData.id,
+            name: sessionData.name,
+          }
+        : null,
+      section: sectionData
+        ? {
+            id: sectionData.id,
+            name: sectionData.name,
+          }
+        : null,
+      stream: streamData
+        ? {
+            id: streamData.id,
+            name: streamData.name,
+          }
+        : null,
       StudentSubject, // This matches what frontend expects
-      subjectDetails: StudentSubject.map(item => item.subject) // Keep for backward compatibility
+      subjectDetails: StudentSubject.map((item) => item.subject), // Keep for backward compatibility
     };
 
     res.status(200).json({
       success: true,
       statusCode: 200,
       message: "Student retrieved successfully",
-      data: enhancedData
+      data: enhancedData,
     });
-
   } catch (error) {
     console.error("Get student by id error:", error);
     next(error);
   }
 };
-
-
-
 
 //! =================== UPDATE STUDENT ===================
 const updateStudent = async (req, res, next) => {
@@ -444,7 +477,7 @@ const updateStudent = async (req, res, next) => {
     if (!studentData) {
       return res.status(404).json({
         success: false,
-        message: "Student not found"
+        message: "Student not found",
       });
     }
 
@@ -453,14 +486,14 @@ const updateStudent = async (req, res, next) => {
       const phoneExists = await Student.findOne({
         where: {
           phone: updateData.phone,
-          id: { [Op.ne]: id }
-        }
+          id: { [Op.ne]: id },
+        },
       });
 
       if (phoneExists) {
         return res.status(409).json({
           success: false,
-          message: "Student with this phone number already exists"
+          message: "Student with this phone number already exists",
         });
       }
     }
@@ -470,14 +503,14 @@ const updateStudent = async (req, res, next) => {
       const emailExists = await Student.findOne({
         where: {
           email: updateData.email,
-          id: { [Op.ne]: id }
-        }
+          id: { [Op.ne]: id },
+        },
       });
 
       if (emailExists) {
         return res.status(409).json({
           success: false,
-          message: "Student with this email already exists"
+          message: "Student with this email already exists",
         });
       }
     }
@@ -488,37 +521,42 @@ const updateStudent = async (req, res, next) => {
     }
 
     // If updating classRoll, check if it's already taken in same class and session
-    if (updateData.classRoll && 
-        (updateData.classRoll !== studentData.classRoll || 
-         updateData.classNameId || 
-         updateData.sessionYearId)) {
-      
+    if (
+      updateData.classRoll &&
+      (updateData.classRoll !== studentData.classRoll ||
+        updateData.classNameId ||
+        updateData.sessionYearId)
+    ) {
       const classNameId = updateData.classNameId || studentData.classNameId;
-      const sessionYearId = updateData.sessionYearId || studentData.sessionYearId;
+      const sessionYearId =
+        updateData.sessionYearId || studentData.sessionYearId;
 
       const rollExists = await Student.findOne({
         where: {
           classNameId,
           sessionYearId,
           classRoll: updateData.classRoll,
-          id: { [Op.ne]: id }
-        }
+          id: { [Op.ne]: id },
+        },
       });
 
       if (rollExists) {
         return res.status(409).json({
           success: false,
-          message: `Roll number ${updateData.classRoll} already exists in this class for the selected session`
+          message: `Roll number ${updateData.classRoll} already exists in this class for the selected session`,
         });
       }
     }
 
     // If updating subjects, validate them
     if (updateData.subjects) {
-      if (!Array.isArray(updateData.subjects) || updateData.subjects.length === 0) {
+      if (
+        !Array.isArray(updateData.subjects) ||
+        updateData.subjects.length === 0
+      ) {
         return res.status(400).json({
           success: false,
-          message: "Subjects must be a non-empty array"
+          message: "Subjects must be a non-empty array",
         });
       }
 
@@ -527,7 +565,7 @@ const updateStudent = async (req, res, next) => {
         if (!subjectExists) {
           return res.status(404).json({
             success: false,
-            message: `Subject with ID ${subjectId} not found`
+            message: `Subject with ID ${subjectId} not found`,
           });
         }
       }
@@ -535,12 +573,12 @@ const updateStudent = async (req, res, next) => {
 
     // Update the student
     await Student.update(updateData, {
-      where: { id }
+      where: { id },
     });
 
     // Get updated student data
     const updatedStudent = await Student.findByPk(id, {
-      attributes: { exclude: ['password'] }
+      attributes: { exclude: ["password"] },
     });
 
     // Get related data
@@ -551,7 +589,7 @@ const updateStudent = async (req, res, next) => {
 
     // Get subject details - no need to parse, it's already an array with DataTypes.JSON
     const subjectIds = updatedStudent.subjects || [];
-    
+
     // Get subject details and format as StudentSubject array
     const StudentSubject = [];
     for (const subjectId of subjectIds) {
@@ -564,54 +602,53 @@ const updateStudent = async (req, res, next) => {
             name: subject.name,
             code: subject.code,
             marks: subject.marks,
-            passMarks: subject.passMarks
-          }
+            passMarks: subject.passMarks,
+          },
         });
       }
     }
 
     const enhancedData = {
       ...updatedStudent.toJSON(),
-      class: classData ? {
-        id: classData.id,
-        name: classData.name
-      } : null,
-      session: sessionData ? {
-        id: sessionData.id,
-        name: sessionData.name
-      } : null,
-      section: sectionData ? {
-        id: sectionData.id,
-        name: sectionData.name
-      } : null,
-      stream: streamData ? {
-        id: streamData.id,
-        name: streamData.name
-      } : null,
+      class: classData
+        ? {
+            id: classData.id,
+            name: classData.name,
+          }
+        : null,
+      session: sessionData
+        ? {
+            id: sessionData.id,
+            name: sessionData.name,
+          }
+        : null,
+      section: sectionData
+        ? {
+            id: sectionData.id,
+            name: sectionData.name,
+          }
+        : null,
+      stream: streamData
+        ? {
+            id: streamData.id,
+            name: streamData.name,
+          }
+        : null,
       StudentSubject,
-      subjectDetails: StudentSubject.map(item => item.subject)
+      subjectDetails: StudentSubject.map((item) => item.subject),
     };
 
     res.status(200).json({
       success: true,
       statusCode: 200,
       message: "Student updated successfully",
-      data: enhancedData
+      data: enhancedData,
     });
-
   } catch (error) {
     console.error("Update student error:", error);
     next(error);
   }
 };
-
-
-
-
-
-
-
-
 
 //! =================== DELETE STUDENT ===================
 const deleteStudent = async (req, res, next) => {
@@ -624,23 +661,89 @@ const deleteStudent = async (req, res, next) => {
     if (!studentData) {
       return res.status(404).json({
         success: false,
-        message: "Student not found"
+        message: "Student not found",
       });
     }
 
     // Delete the student
     await Student.destroy({
-      where: { id }
+      where: { id },
     });
 
     res.status(200).json({
       success: true,
       statusCode: 200,
-      message: "Student deleted successfully"
+      message: "Student deleted successfully",
     });
-
   } catch (error) {
     console.error("Delete student error:", error);
+    next(error);
+  }
+};
+
+// =================== STUDENT LOGIN ===================
+const loginStudent = async (req, res, next) => {
+  try {
+    const { phone, password } = req.body;
+
+    // Validate required fields
+    if (!phone || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number and password are required",
+      });
+    }
+
+    // Find student by phone number
+    const student = await Student.findOne({
+      where: { phone },
+    });
+
+    if (!student) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid phone number or password",
+      });
+    }
+
+    // Check if student is active (you can add a status field if needed)
+    // if (student.status === 'inactive') {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Your account is inactive. Please contact administration."
+    //   });
+    // }
+
+    // Compare password
+    const isPasswordValid = await bcrypt.compare(password, student.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid phone number or password",
+      });
+    }
+
+    // Get student data without password
+    const studentData = student.toJSON();
+    delete studentData.password;
+
+    // Generate JWT token
+    const payload = {
+      id: studentData.id,
+      email: studentData.email,
+      role: "student",
+    };
+    const accessToken = create_access_token(payload);
+
+    res.status(200).json({
+      success: true,
+      statusCode: 200,
+      message: "Student login successful",
+      accessToken: accessToken,
+      data: studentData,
+    });
+  } catch (error) {
+    console.error("Student login error:", error);
     next(error);
   }
 };
@@ -651,4 +754,5 @@ module.exports = {
   getStudentById,
   updateStudent,
   deleteStudent,
+  loginStudent,
 };
